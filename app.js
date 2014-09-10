@@ -1,14 +1,14 @@
  'use strict';
- var lib = require('./lib'),
-     router = require('./router'),
+ GLOBAL.lib = require('./lib');
+ var router = require('./router'),
      server = lib.config.server,
-     app = lib.express();
+     app = lib.express(),
+     message = lib.message;
  router(app);
  lib.mongoose.connect(lib.config.db);
- app.listen(server.port, server.host);
-
+ app.listen(server.port);
 
  // Caught unhandled exceptions in different processes
  process.on('uncaughtException', function(err) {
-     console.log('uncaught Exception', err);
+     console.log(message.UNCAUGHT_EXCEPTION, err);
  });

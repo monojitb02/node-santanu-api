@@ -1,18 +1,24 @@
 'use strict';
+var md5 = lib.md5,
+    Q = lib.q,
+    message = lib.message;
 var errorNotifier = function(err) {
+    console.log(err);
     if (err.name === 'ValidationError') {
-        return "validation error in '" +
+        return message.VALIDATION_ERROR_IN + "'" +
             Object.keys(err.errors).join("','") + "'";
     } else if (err.name === 'MongoError' && err.code == 11000) {
-        return "unique key constraint error";
+        return message.UNIQUE_KEY_CONSTRAINT_ERROR;
     }
 };
-module.exports.CRUDE = {
-    insert: function(req, res, model) {
-        new model(req.body).save(function(err, savedData) {
-            var response = {};
+module.exports.CRUD = {
+    insert: function(dataObject, model) {
+        var deferred = Q.defer();
+        new model(dataObject).save(function(err, savedData) {
+            var response = {
+                status: false
+            };
             if (err) {
-                response.status = false;
                 response.cause = errorNotifier(err);
             } else if (savedData) {
                 response = {
@@ -20,24 +26,20 @@ module.exports.CRUDE = {
                     _id: savedData._id
                 };
             } else {
-                response = {
-                    status: false,
-                    cause: "Unknown Error in saving"
-                };
+                response.cause = message.UNKNOWN_ERROR_IN_SAVING;
             }
-            res.send(response);
+            deferred.resolve(response);
         });
+        return deferred.promise;
     },
-    update: function(req, res, model, mongoose) {
-        var updatedData = req.body,
-            id = req.body._id;
-        delete updatedData._id;
-        // console.log(updatedData, model);
-        model.findOneAndUpdate({
+    update: function(dataObject, model) {
+        var id = dataObject._id,
+            deferred = Q.defer();
+        delete dataObject._id;
+        model.update({
                 _id: id
-            }, updatedData,
+            }, dataObject,
             function(err, updated) {
-                console.log(updated);
                 var response = {
                     status: true
                 };
@@ -45,14 +47,30 @@ module.exports.CRUDE = {
                     response.status = false;
                     response.cause = err;
                 }
-                res.send(response);
-            });
-        /* model.find({
-            _id: id
-        }, function(err, result) {
-            if (!err) {
-                console.log(result);
+                if (updated === 0) {
+                    response.status = false;
+                    response.cause = message.NOTHING_UPDATED;
+                }
+                deferred.resolve(response);
             }
-        });*/
+        );
+        return deferred.promise;
+    },
+    select: function(model, query, options) {
+        var deferred = Q.defer();
+        model.find(query, options, function(err, data) {
+            if (err) {
+                deferred.resolve({
+                    status: false,
+                    cause: err
+                });
+            } else {
+                deferred.resolve({
+                    status: true,
+                    data: data
+                });
+            }
+        });
+        return deferred.promise;
     }
 };

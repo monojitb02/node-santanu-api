@@ -8,8 +8,8 @@ module.exports = {
     fs: require('fs'), //Acquiring fs and exporting it as fs
     path: require('path'), //Acquiring fs and exporting it as fs
     bodyParser: require('body-parser'),
-    utils: require('./utils'),
+    md5: require('MD5'),
     workflow: require('./config/workflow'), //Acquiring base and exporting it as base
     config: require('./config/config'), //Acquiring config and exporting it as config
-    message: require('./lang/en') //Acquiring message and exporting it as message,
+    message: require('./lang') //Acquiring message and exporting it as message,
 };
