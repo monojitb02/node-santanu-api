@@ -4,6 +4,9 @@
      server = lib.config.server,
      app = lib.express(),
      message = lib.message;
+
+
+
  router(app);
  lib.mongoose.connect(lib.config.db);
  app.listen(server.port);

@@ -3,7 +3,6 @@ var md5 = lib.md5,
     Q = lib.q,
     message = lib.message;
 var errorNotifier = function(err) {
-    console.log(err);
     if (err.name === 'ValidationError') {
         return message.VALIDATION_ERROR_IN + "'" +
             Object.keys(err.errors).join("','") + "'";

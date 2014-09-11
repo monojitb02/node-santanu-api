@@ -19,7 +19,7 @@ module.exports.login = function(req, res) {
                 },
                 function(err, data) {
                     if (err) {
-                        throw err;
+                        deferred.reject(err);
                     } else if (data) {
                         deferred.resolve(data);
                     } else {
@@ -42,7 +42,11 @@ module.exports.login = function(req, res) {
                 status: true,
                 user_id: data._id
             };
-            deferred.resolve(loginResult);
+            Q.all([project.getDcuments(5, 0), createPromise(loginResult)])
+                .spread(function(projectData, loginData) {
+                    loginData.projects = projectData;
+                    deferred.resolve(loginData);
+                });
             return deferred.promise;
         }, function(err) {
             var deferred = Q.defer();
@@ -51,19 +55,6 @@ module.exports.login = function(req, res) {
                 cause: err
             };
             deferred.resolve(loginResult);
-            return deferred.promise;
-        })
-        .then(function(data) {
-            var deferred = Q.defer();
-            //console.log("data", data);
-            Q.all([project.getDcuments(5, 0), createPromise(data)])
-                .spread(function(projectData, userData) {
-                    //console.log("x:", userData, "y:", projectData);
-                    if (userData.status === true) {
-                        userData.projects = projectData;
-                    }
-                    deferred.resolve(userData);
-                })
             return deferred.promise;
         })
         .done(function(response) {
